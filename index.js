@@ -1,139 +1,132 @@
-"use latest";
-
-const Auth0     = require('auth0@0.8.2');
+const Auth0     = require('auth0');
 const async     = require('async');
 const moment    = require('moment');
 const azure     = require('azure-storage');
 const useragent = require('useragent');
+const express   = require('express');
+const Webtask   = require('webtask-tools');
+const app       = express();
 
-const getCheckpointId = (history) => {
-  if (history && history.length > 0) {
-    console.log('Trying to get last checkpointId from previous run.');
-
-    for (let i = 0; i < history.length; i++) {
-      console.log (`Run: ${history[i].started_at} - ${history[i].type}`);
-
-      if (history[i].statusCode === 200 && history[i].body){
-        let result = JSON.parse(history[i].body);
-        if (result && result.checkpointId) {
-
-          console.log (`This is the last one we want to continue from: ${result.checkpointId}`);
-          return result.checkpointId;
-        }
-      }
-    };
-  }
-}
-
-module.exports = (ctx, done) => {
+function lastLogCheckpoint (req, res) {
   let required_settings = ['AUTH0_DOMAIN', 'AUTH0_GLOBAL_CLIENT_ID', 'AUTH0_GLOBAL_CLIENT_SECRET', 'STORAGE_ACCOUNT_NAME', 'STORAGE_ACCOUNT_KEY', 'STORAGE_CONTAINER_NAME'];
   let missing_settings  = required_settings.filter((setting) => !ctx.data[setting]);
+
   if (missing_settings.length) {
-    return done({ message: 'Missing settings: ' + missing_settings.join(', ') });
+    return res.status(400).send({ message: 'Missing settings: ' + missing_settings.join(', ') });
   }
 
   // If this is a scheduled task, we'll get the last log checkpoint from the previous run and continue from there.
-  let startCheckpointId = getCheckpointId(ctx.body && ctx.body.results);
+  req.webtaskContext.read('history', {}, function (err, data) {
 
-  // Initialize both clients.
-  const auth0 = new Auth0({
-     domain: ctx.data.AUTH0_DOMAIN,
-     clientID: ctx.data.AUTH0_GLOBAL_CLIENT_ID,
-     clientSecret: ctx.data.AUTH0_GLOBAL_CLIENT_SECRET
-  });
-  const blobService = azure.createBlobService(ctx.data.STORAGE_ACCOUNT_NAME, ctx.data.STORAGE_ACCOUNT_KEY);
+    let startCheckpointId = typeof data === 'undefined' ? null : data.checkpointId;
 
-  // Start the process.
-  async.waterfall([
-    (callback) => {
-      auth0.getAccessToken((err) => {
-        if (err) {
-          console.log('Error authenticating:', err);
+    // Initialize both clients.
+    const auth0 = new Auth0({
+       domain: ctx.data.AUTH0_DOMAIN,
+       clientID: ctx.data.AUTH0_GLOBAL_CLIENT_ID,
+       clientSecret: ctx.data.AUTH0_GLOBAL_CLIENT_SECRET
+    });
+    const blobService = azure.createBlobService(ctx.data.STORAGE_ACCOUNT_NAME, ctx.data.STORAGE_ACCOUNT_KEY);
+
+    // Start the process.
+    async.waterfall([
+      (callback) => {
+        auth0.getAccessToken((err) => {
+          if (err) {
+            console.log('Error authenticating:', err);
+          }
+          return callback(err);
+        });
+      },
+      (callback) => {
+        try {
+          blobService.createContainerIfNotExists(ctx.data.STORAGE_CONTAINER_NAME, (err) => callback(err));
+        } catch (e) {
+          return callback(e);
         }
-        return callback(err);
-      });
-    },
-    (callback) => {
-      try {
-        blobService.createContainerIfNotExists(ctx.data.STORAGE_CONTAINER_NAME, (err) => callback(err));
-      } catch (e) {
-        return callback(e);
-      }
-    },
-    (callback) => {
-      const getLogs = (context) => {
-        console.log(`Downloading logs from: ${context.checkpointId || 'Start'}.`);
+      },
+      (callback) => {
+        const getLogs = (context) => {
+          console.log(`Downloading logs from: ${context.checkpointId || 'Start'}.`);
 
-        context.logs = context.logs || [];
-        auth0.getLogs({ take: 200, from: context.checkpointId }, (err, logs) => {
+          context.logs = context.logs || [];
+          auth0.getLogs({ take: 200, from: context.checkpointId }, (err, logs) => {
+            if (err) {
+              return callback(err);
+            }
+
+            if (logs && logs.length) {
+              logs.forEach((l) => context.logs.push(l));
+              context.checkpointId = context.logs[context.logs.length - 1]._id;
+              return setImmediate(() => getLogs(context));
+            }
+
+            console.log(`Total logs: ${context.logs.length}.`);
+            return callback(null, context);
+          });
+        };
+
+        getLogs({ checkpointId: startCheckpointId });
+      },
+      (context, callback) => {
+        context.logs = context.logs.map((record) => {
+          let level = 0;
+          record.type_code = record.type;
+          if (logTypes[record.type]) {
+            level = logTypes[record.type].level;
+            record.type = logTypes[record.type].event;
+          }
+
+          let agent = useragent.parse(record.user_agent);
+          record.os = agent.os.toString();
+          record.os_version = agent.os.toVersion();
+          record.device = agent.device.toString();
+          record.device_version = agent.device.toVersion();
+          return record;
+        });
+        callback(null, context);
+      },
+      (context, callback) => {
+        console.log('Uploading blobs...');
+
+        async.eachLimit(context.logs, 5, (log, cb) => {
+          const date = moment(log.date);
+          const url = `${date.format('YYYY/MM/DD')}/${date.format('HH')}/${log._id}.json`;
+          console.log(`Uploading ${url}.`);
+
+          blobService.createBlockBlobFromText(ctx.data.STORAGE_CONTAINER_NAME, url, JSON.stringify(log), cb);
+        }, (err) => {
           if (err) {
             return callback(err);
           }
 
-          if (logs && logs.length) {
-            logs.forEach((l) => context.logs.push(l));
-            context.checkpointId = context.logs[context.logs.length - 1]._id;
-            return setImmediate(() => getLogs(context));
-          }
-
-          console.log(`Total logs: ${context.logs.length}.`);
+          console.log('Upload complete.');
           return callback(null, context);
         });
-      };
+      }
+    ], function (err, context) {
+      if (err) {
+        console.log('Job failed.');
 
-      getLogs({ checkpointId: startCheckpointId });
-    },
-    (context, callback) => {
-      context.logs = context.logs.map((record) => {
-        let level = 0;
-        record.type_code = record.type;
-        if (logTypes[record.type]) {
-          level = logTypes[record.type].level;
-          record.type = logTypes[record.type].event;
-        }
+        return req.webtaskContext.write('history', JSON.stringify({checkpointId: startCheckpointId}), {}, function (error) {
+          if (error) return res.status(500).send(error);
 
-        let agent = useragent.parse(record.user_agent);
-        record.os = agent.os.toString();
-        record.os_version = agent.os.toVersion();
-        record.device = agent.device.toString();
-        record.device_version = agent.device.toVersion();
-        return record;
+          res.status(500).send({
+            error: err
+          });
+        });
+      }
+
+      console.log('Job complete.');
+      return req.webtaskContext.write('history', JSON.stringify({checkpointId: context.checkpointId, totalLogsProcessed: context.logs.length}), {}, function (error) {
+        if (error) return res.status(500).send(error);
+
+        res.sendStatus(200);
       });
-      callback(null, context);
-    },
-    (context, callback) => {
-      console.log('Uploading blobs...');
-
-      async.eachLimit(context.logs, 5, (log, cb) => {
-        const date = moment(log.date);
-        const url = `${date.format('YYYY/MM/DD')}/${date.format('HH')}/${log._id}.json`;
-        console.log(`Uploading ${url}.`);
-
-        blobService.createBlockBlobFromText(ctx.data.STORAGE_CONTAINER_NAME, url, JSON.stringify(log), cb);
-      }, (err) => {
-        if (err) {
-          return callback(err);
-        }
-
-        console.log('Upload complete.');
-        return callback(null, context);
-      });
-    }
-  ], function (err, context) {
-    if (err) {
-      console.log('Job failed.')
-      return done({ error: err }, {
-        checkpointId: startCheckpointId
-      });
-    }
-
-    console.log('Job complete.');
-    return done(null, {
-      checkpointId: context.checkpointId,
-      totalLogsProcessed: context.logs.length
     });
+
   });
-};
+}
 
 const logTypes = {
   's': {
@@ -291,3 +284,8 @@ const logTypes = {
     level: 3 // Error
   }
 };
+
+app.get ('/', lastLogCheckpoint);
+app.post('/', lastLogCheckpoint);
+
+module.exports = Webtask.fromExpress(app);
