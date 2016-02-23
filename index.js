@@ -8,6 +8,7 @@ const Webtask   = require('webtask-tools');
 const app       = express();
 
 function lastLogCheckpoint (req, res) {
+  let ctx               = req.webtaskContext;
   let required_settings = ['AUTH0_DOMAIN', 'AUTH0_GLOBAL_CLIENT_ID', 'AUTH0_GLOBAL_CLIENT_SECRET', 'STORAGE_ACCOUNT_NAME', 'STORAGE_ACCOUNT_KEY', 'STORAGE_CONTAINER_NAME'];
   let missing_settings  = required_settings.filter((setting) => !ctx.data[setting]);
 
@@ -22,8 +23,8 @@ function lastLogCheckpoint (req, res) {
 
     // Initialize both clients.
     const auth0 = new Auth0({
-       domain: ctx.data.AUTH0_DOMAIN,
-       clientID: ctx.data.AUTH0_GLOBAL_CLIENT_ID,
+       domain:       ctx.data.AUTH0_DOMAIN,
+       clientID:     ctx.data.AUTH0_GLOBAL_CLIENT_ID,
        clientSecret: ctx.data.AUTH0_GLOBAL_CLIENT_SECRET
     });
     const blobService = azure.createBlobService(ctx.data.STORAGE_ACCOUNT_NAME, ctx.data.STORAGE_ACCOUNT_KEY);
