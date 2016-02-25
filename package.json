@@ -1,5 +1,5 @@
 {
-  "name": "auth0-logs-to-azure",
+  "name": "auth0-logs-to-azure-blob-storage",
   "version": "1.0.1",
   "description": "This extension will take all of your Auth0 logs and export them to Azure Blob Storage.",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/auth0/auth0-logs-to-azure.git"
+    "url": "git+https://github.com/auth0/auth0-logs-to-azure-blob-storage.git"
   },
   "author": "sandrino@auth0.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/auth0/auth0-logs-to-azure/issues"
+    "url": "https://github.com/auth0/auth0-logs-to-azure-blob-storage/issues"
   },
-  "homepage": "https://github.com/auth0/auth0-logs-to-azure#readme",
+  "homepage": "https://github.com/auth0/auth0-logs-to-azure-blob-storage#readme",
   "dependencies": {
     "async": "1.0.0",
     "auth0": "0.8.2",
