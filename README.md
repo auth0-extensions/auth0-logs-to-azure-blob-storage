@@ -34,7 +34,7 @@ wt cron schedule \
     --secret STORAGE_CONTAINER_NAME="YOUR_STORAGE_CONTAINER_NAME" \
     --json \
     "*/5 * * * *" \
-    https://raw.githubusercontent.com/auth0/auth0-logs-to-azure/master/index.js
+    ./build/bundle.js
 ```
 
 > You can get your Global Client Id/Secret here: https://auth0.com/docs/api/v1
