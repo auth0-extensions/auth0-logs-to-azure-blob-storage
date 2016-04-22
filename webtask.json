@@ -1,7 +1,7 @@
 {
   "title": "Auth0 Logs to Azure",
   "name": "auth0-logs-to-azure-blob-storage",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "auth0",
   "description": "This extension will take all of your Auth0 logs and export them to Azure Blob Storage",
   "type": "cron",
@@ -10,15 +10,13 @@
     "extension"
   ],
   "schedule": "0 */5 * * * *",
+  "auth0": {
+    "scopes": "read:logs"
+  },
   "secrets": {
-    "AUTH0_DOMAIN": {
-      "description": "Auth0 domain"
-    },
-    "AUTH0_GLOBAL_CLIENT_ID": {
-      "description": "Auth0 global ClientID"
-    },
-    "AUTH0_GLOBAL_CLIENT_SECRET": {
-      "description": "Auth0 global ClientSecret"
+    "BATCH_SIZE": {
+      "description": "The ammount of logs to be read on each execution. Maximun is 100.",
+      "default": 100
     },
     "STORAGE_ACCOUNT_NAME": {
       "description": "Azure Storage AccountName",
