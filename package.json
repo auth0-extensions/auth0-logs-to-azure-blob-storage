@@ -1,6 +1,6 @@
 {
   "name": "auth0-logs-to-azure-blob-storage",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "This extension will take all of your Auth0 logs and export them to Azure Blob Storage.",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,8 @@
     "lru-memoizer": "^1.2.0",
     "moment": "2.10.3",
     "useragent": "2.1.6",
-    "webtask-tools": "^1.3.0"
+    "webtask-tools": "^1.3.0",
+    "request": "^2.56.0"
   },
   "devDependencies": {
     "babel-core": "^6.5.1",
