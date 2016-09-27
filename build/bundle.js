@@ -47,6 +47,10 @@ module.exports =
 
 	'use strict';
 
+	var _logTypes;
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 	var async = __webpack_require__(1);
 	var moment = __webpack_require__(2);
 	var azure = __webpack_require__(3);
@@ -176,7 +180,7 @@ module.exports =
 	  });
 	}
 
-	var logTypes = {
+	var logTypes = (_logTypes = {
 	  's': {
 	    event: 'Success Login',
 	    level: 1 // Info
@@ -185,8 +189,16 @@ module.exports =
 	    event: 'Success Exchange',
 	    level: 1 // Info
 	  },
+	  'seccft': {
+	    event: 'Success Exchange (Client Credentials)',
+	    level: 1 // Info
+	  },
 	  'feacft': {
 	    event: 'Failed Exchange',
+	    level: 3 // Error
+	  },
+	  'feccft': {
+	    event: 'Failed Exchange (Client Credentials)',
 	    level: 3 // Error
 	  },
 	  'f': {
@@ -331,7 +343,28 @@ module.exports =
 	    event: 'Failed User Deletion',
 	    level: 3 // Error
 	  }
-	};
+	}, _defineProperty(_logTypes, 'fapi', {
+	  event: 'Failed API Operation',
+	  level: 3 // Error
+	}), _defineProperty(_logTypes, 'limit_wc', {
+	  event: 'Blocked Account',
+	  level: 3 // Error
+	}), _defineProperty(_logTypes, 'limit_mu', {
+	  event: 'Blocked IP Address',
+	  level: 3 // Error
+	}), _defineProperty(_logTypes, 'slo', {
+	  event: 'Success Logout',
+	  level: 1 // Info
+	}), _defineProperty(_logTypes, 'flo', {
+	  event: ' Failed Logout',
+	  level: 3 // Error
+	}), _defineProperty(_logTypes, 'sd', {
+	  event: 'Success Delegation',
+	  level: 1 // Info
+	}), _defineProperty(_logTypes, 'fd', {
+	  event: 'Failed Delegation',
+	  level: 3 // Error
+	}), _logTypes);
 
 	function getLogsFromAuth0(domain, token, take, from, cb) {
 	  var url = 'https://' + domain + '/api/v2/logs';

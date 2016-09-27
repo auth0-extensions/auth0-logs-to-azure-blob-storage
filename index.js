@@ -136,8 +136,16 @@ const logTypes = {
     event: 'Success Exchange',
     level: 1 // Info
   },
+  'seccft': {
+    event: 'Success Exchange (Client Credentials)',
+    level: 1 // Info
+  },
   'feacft': {
     event: 'Failed Exchange',
+    level: 3 // Error
+  },
+  'feccft': {
+    event: 'Failed Exchange (Client Credentials)',
     level: 3 // Error
   },
   'f': {
@@ -281,6 +289,34 @@ const logTypes = {
   'fdu': {
     event: 'Failed User Deletion',
     level: 3 // Error
+  },
+  'fapi': {
+    event: 'Failed API Operation',
+    level: 3 // Error
+  },
+  'limit_wc': {
+    event: 'Blocked Account',
+    level: 3 // Error
+  },
+  'limit_mu': {
+    event: 'Blocked IP Address',
+    level: 3 // Error
+  },
+  'slo': {
+    event: 'Success Logout',
+    level: 1 // Info
+  },
+  'flo': {
+    event: ' Failed Logout',
+    level: 3 // Error
+  },
+  'sd': {
+    event: 'Success Delegation',
+    level: 1 // Info
+  },
+  'fd': {
+    event: 'Failed Delegation',
+    level: 3 // Error
   }
 };
 
@@ -306,9 +342,6 @@ function getLogsFromAuth0 (domain, token, take, from, cb) {
       console.log('Error getting logs', err);
       cb(null, err);
     } else {
-      console.log('x-ratelimit-limit: ', res.headers['x-ratelimit-limit']);
-      console.log('x-ratelimit-remaining: ', res.headers['x-ratelimit-remaining']);
-      console.log('x-ratelimit-reset: ', res.headers['x-ratelimit-reset']);
       cb(body);
     }
   });
