@@ -19,7 +19,7 @@
   "homepage": "https://github.com/auth0/auth0-logs-to-azure-blob-storage#readme",
   "dependencies": {
     "async": "1.0.0",
-    "azure-storage": "0.9.0",
+    "azure-storage": "1.2.0",
     "express": "4.14.0",
     "lru-memoizer": "^1.2.0",
     "moment": "2.11.2",
