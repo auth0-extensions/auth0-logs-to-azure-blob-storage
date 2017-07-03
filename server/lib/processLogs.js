@@ -11,7 +11,7 @@ module.exports = (storage) =>
   (req, res, next) => {
     const wtBody = (req.webtaskContext && req.webtaskContext.body) || req.body || {};
     const wtHead = (req.webtaskContext && req.webtaskContext.headers) || {};
-    const isCron = (wtBody.schedule && wtBody.state === 'active') || (wtHead.referer === 'https://manage.auth0.com/' && wtHead['if-none-match']);
+    const isCron = (wtBody.schedule && wtBody.state === 'active') || (wtHead.referer === `${config('AUTH0_MANAGE_URL')}/` && wtHead['if-none-match']);
 
     if (!isCron) {
       return next();
@@ -33,7 +33,7 @@ module.exports = (storage) =>
 
     const onLogsReceived = (logs, callback) => {
       if (!logs || !logs.length) {
-        return cb();
+        return callback();
       }
 
       logger.info(`Sending ${logs.length} logs to Azure.`);
@@ -68,18 +68,52 @@ module.exports = (storage) =>
       logLevel: config('LOG_LEVEL')
     };
 
+    if (!options.batchSize || options.batchSize > 100) {
+      options.batchSize = 100;
+    }
+
     const auth0logger = new loggingTools.LogsProcessor(storage, options);
+
+    const sendDailyReport = (lastReportDate) => {
+      const current = new Date();
+
+      const end = current.getTime();
+      const start = end - 86400000;
+      auth0logger.getReport(start, end)
+        .then(report => slack.send(report, report.checkpoint))
+        .then(() => storage.read())
+        .then((data) => {
+          data.lastReportDate = lastReportDate;
+          return storage.write(data);
+        });
+    };
+
+    const checkReportTime = () => {
+      storage.read()
+        .then((data) => {
+          const now = moment().format('DD-MM-YYYY');
+          const reportTime = config('DAILY_REPORT_TIME') || 16;
+
+          if (data.lastReportDate !== now && new Date().getHours() >= reportTime) {
+            sendDailyReport(now);
+          }
+        })
+    };
 
     return auth0logger
       .run(onLogsReceived)
       .then(result => {
-        if (config('SLACK_SEND_SUCCESS') === true || config('SLACK_SEND_SUCCESS') === 'true') {
+        if (result && result.status && result.status.error) {
+          slack.send(result.status, result.checkpoint);
+        } else if (config('SLACK_SEND_SUCCESS') === true || config('SLACK_SEND_SUCCESS') === 'true') {
           slack.send(result.status, result.checkpoint);
         }
+        checkReportTime();
         res.json(result);
       })
       .catch(err => {
         slack.send({ error: err, logsProcessed: 0 }, null);
+        checkReportTime();
         next(err);
       });
   };

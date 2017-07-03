@@ -26,7 +26,7 @@ class App extends Component {
                         <a href={`${window.config.AUTH0_MANAGE_URL}/#/extensions`}>Extensions</a>
                       </li>
                     </ol>
-                    <h1 className="pull-left" style={{ paddingTop: '10px' }}>Logs To Azure</h1></div>
+                    <h1 className="pull-left" style={{ paddingTop: '10px' }}>Logs To Azure Blob Storage</h1></div>
                 </div>
                 <LogsContainer />
               </div>

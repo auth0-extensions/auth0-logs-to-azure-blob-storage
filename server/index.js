@@ -25,8 +25,24 @@ module.exports = (configProvider, storageProvider) => {
     stream: logger.stream
   }));
 
+  const prepareBody = (middleware) =>
+    (req, res, next) => {
+      if (req.webtaskContext && req.webtaskContext.body) {
+        req.body = req.webtaskContext.body;
+        return next();
+      }
 
-  // Configure routes.
+      return middleware(req, res, next);
+    };
+
+  app.use(prepareBody(bodyParser.json()));
+  app.use(prepareBody(bodyParser.urlencoded({ extended: false })));
+
+  app.use('/meta', meta());
+  app.use('/.extensions', hooks());
+
+  app.use(processLogs(storage));
+
   app.use(expressTools.routes.dashboardAdmins({
     secret: config('EXTENSION_SECRET'),
     audience: 'urn:logs-to-azure-blob-storage',
@@ -35,16 +51,11 @@ module.exports = (configProvider, storageProvider) => {
     baseUrl: config('PUBLIC_WT_URL') || config('WT_URL'),
     clientName: 'Logs to Azure',
     urlPrefix: '',
-    sessionStorageKey: 'logs-to-azure-blob-storage:apiToken',
-    scopes: 'read:logs'
+    sessionStorageKey: 'logs-to-azure-blob-storage:apiToken'
   }));
-
-  app.use('/meta', meta());
-  app.use('/.extensions', hooks());
 
   app.use('/app', Express.static(path.join(__dirname, '../dist')));
 
-  app.use(processLogs(storage));
   app.use('/', routes(storage));
 
   // Generic error handler.
