@@ -68,8 +68,8 @@
     "auth0-extension-express-tools": "^1.1.0",
     "auth0-extension-tools": "1.2.1",
     "auth0-extension-ui": "^1.0.1",
-    "auth0-oauth2-express": "^1.1.8",
     "auth0-log-extension-tools": "1.2.2",
+    "auth0-oauth2-express": "^1.1.8",
     "axios": "^0.15.0",
     "azure-storage": "1.2.0",
     "babel": "^6.5.2",
@@ -108,9 +108,9 @@
     "request": "^2.72.0",
     "request-promise": "^3.0.0",
     "semver": "^5.1.0",
+    "useragent": "^2.1.6",
     "webtask-tools": "^3.0.0",
-    "winston": "^2.2.0",
-    "useragent": "2.1.6"
+    "winston": "^2.2.0"
   },
   "devDependencies": {
     "auth0-extensions-cli": "^1.0.5",
