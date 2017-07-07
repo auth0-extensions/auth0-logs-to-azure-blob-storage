@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/auth0/auth0-logs-to-azure-blob-storage.git"
+    "url": "git+https://github.com/auth0-extensions/auth0-logs-to-azure-blob-storage.git"
   },
   "author": "sandrino@auth0.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/auth0/auth0-logs-to-azure-blob-storage/issues"
+    "url": "https://github.com/auth0-extensions/auth0-logs-to-azure-blob-storage/issues"
   },
-  "homepage": "https://github.com/auth0/auth0-logs-to-azure-blob-storage#readme",
+  "homepage": "https://github.com/auth0-extensions/auth0-logs-to-azure-blob-storage#readme",
   "auth0-extension": {
     "externals": [
       "async@2.1.2",

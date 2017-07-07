@@ -5,7 +5,7 @@ const config = require('./server/lib/config');
 const logger = require('./server/lib/logger');
 
 const createServer = tools.createServer((config, storage) => {
-  logger.info('Starting Auth0 Logs to Azure Extension - Version:', process.env.CLIENT_VERSION);
+  logger.info('Starting Auth0 Logs to Azure Blob Storage Extension - Version:', process.env.CLIENT_VERSION);
   return expressApp(config, storage);
 });
 

@@ -1,4 +1,4 @@
-# Auth0 - Logs to Azure
+# Auth0 - Logs to Azure Blob Storage
 
 [![Auth0 Extensions](http://cdn.auth0.com/extensions/assets/badge.svg)](https://sandbox.it.auth0.com/api/run/auth0-extensions/extensions-badge?webtask_no_cache=1)
 
@@ -7,37 +7,6 @@ This extension will take all of your Auth0 logs and export them to Azure Blob St
 ## Configure Azure Blob Storage
 
 First you'll need to [create an Azure Storage account](https://portal.azure.com/#create/Microsoft.StorageAccount.1.0.0).
-
-## Configure Webtask
-
-If you haven't configured Webtask on your machine run this first:
-
-```
-npm i -g wt-cli
-wt init
-```
-
-> Requires at least node 0.10.40 - if you're running multiple version of node make sure to load the right version, e.g. "nvm use 0.10.40"
-
-## Deploy to Webtask.io
-
-To run it on a schedule (run every 5 minutes for example):
-
-```
-wt cron schedule \
-    --name auth0-logs-to-azure \
-    --secret AUTH0_DOMAIN="YOUR_AUTH0_DOMAIN" \
-    --secret AUTH0_GLOBAL_CLIENT_ID="YOUR_AUTH0_GLOBAL_CLIENT_ID" \
-    --secret AUTH0_GLOBAL_CLIENT_SECRET="YOUR_AUTH0_GLOBAL_CLIENT_SECRET" \
-    --secret STORAGE_ACCOUNT_NAME="YOUR_STORAGE_ACCOUNT_NAME" \
-    --secret STORAGE_ACCOUNT_KEY="YOUR_STORAGE_ACCOUNT_KEY" \
-    --secret STORAGE_CONTAINER_NAME="YOUR_STORAGE_CONTAINER_NAME" \
-    --json \
-    "*/5 * * * *" \
-    ./build/bundle.js
-```
-
-> You can get your Global Client Id/Secret here: https://auth0.com/docs/api/v1
 
 ## Usage
 

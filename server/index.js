@@ -49,7 +49,7 @@ module.exports = (configProvider, storageProvider) => {
     rta: config('AUTH0_RTA').replace('https://', ''),
     domain: config('AUTH0_DOMAIN'),
     baseUrl: config('PUBLIC_WT_URL') || config('WT_URL'),
-    clientName: 'Logs to Azure',
+    clientName: 'Logs to Azure Blob Storage',
     urlPrefix: '',
     sessionStorageKey: 'logs-to-azure-blob-storage:apiToken'
   }));

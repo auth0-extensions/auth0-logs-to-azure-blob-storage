@@ -1,5 +1,5 @@
 {
-  "title": "Auth0 Logs to Azure",
+  "title": "Auth0 Logs to Azure Blob Storage",
   "name": "auth0-logs-to-azure-blob-storage",
   "version": "2.0.0",
   "author": "auth0",
@@ -22,15 +22,15 @@
       "default": 100
     },
     "STORAGE_ACCOUNT_NAME": {
-      "description": "Azure Storage AccountName",
+      "description": "Azure Storage Account Name",
       "required": true
     },
     "STORAGE_ACCOUNT_KEY": {
-      "description": "Azure Storage AccountKey",
+      "description": "Azure Storage Account Key",
       "required": true
     },
     "STORAGE_CONTAINER_NAME": {
-      "description": "Azure Storage ContainerName",
+      "description": "Azure Blob Storage Container Name",
       "required": true
     },
     "START_FROM": {

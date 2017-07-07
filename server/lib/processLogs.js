@@ -23,11 +23,14 @@ module.exports = (storage) =>
       record.type_code = record.type;
       record.type = loggingTools.logTypes.get(record.type);
 
-      let agent = useragent.parse(record.user_agent);
-      record.os = agent.os.toString();
-      record.os_version = agent.os.toVersion();
-      record.device = agent.device.toString();
-      record.device_version = agent.device.toVersion();
+      if (record.user_agent && record.user_agent.length) {
+        let agent = useragent.parse(record.user_agent);
+        record.os = agent.os.toString();
+        record.os_version = agent.os.toVersion();
+        record.device = agent.device.toString();
+        record.device_version = agent.device.toVersion();
+      }
+
       return record;
     };
 
@@ -36,7 +39,7 @@ module.exports = (storage) =>
         return callback();
       }
 
-      logger.info(`Sending ${logs.length} logs to Azure.`);
+      logger.info(`Sending ${logs.length} logs to Azure Blob Storage.`);
 
       async.eachLimit(logs.map(remapLogs), 5, (log, cb) => {
         const date = moment(log.date);
@@ -56,7 +59,7 @@ module.exports = (storage) =>
     const slack = new loggingTools.reporters.SlackReporter({
       hook: config('SLACK_INCOMING_WEBHOOK_URL'),
       username: 'auth0-logs-to-azure-blob-storage',
-      title: 'Logs To Azure' });
+      title: 'Logs To Azure Blob Storage' });
 
     const options = {
       domain: config('AUTH0_DOMAIN'),
