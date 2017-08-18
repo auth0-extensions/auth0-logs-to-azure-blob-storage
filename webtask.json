@@ -5,6 +5,7 @@
   "author": "auth0",
   "description": "This extension will take all of your Auth0 logs and export them to Azure Blob Storage",
   "type": "cron",
+  "category": "log_export",
   "initialUrlPath": "/login",
   "keywords": [
     "auth0",
