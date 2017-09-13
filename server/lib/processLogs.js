@@ -7,7 +7,7 @@ const loggingTools = require('auth0-log-extension-tools');
 const config = require('../lib/config');
 const logger = require('../lib/logger');
 
-module.exports = (storage) =>
+module.exports = storage =>
   (req, res, next) => {
     const wtBody = (req.webtaskContext && req.webtaskContext.body) || req.body || {};
     const wtHead = (req.webtaskContext && req.webtaskContext.headers) || {};
@@ -24,7 +24,7 @@ module.exports = (storage) =>
       record.type = loggingTools.logTypes.get(record.type);
 
       if (record.user_agent && record.user_agent.length) {
-        let agent = useragent.parse(record.user_agent);
+        const agent = useragent.parse(record.user_agent);
         record.os = agent.os.toString();
         record.os_version = agent.os.toVersion();
         record.device = agent.device.toString();
@@ -41,7 +41,7 @@ module.exports = (storage) =>
 
       logger.info(`Sending ${logs.length} logs to Azure Blob Storage.`);
 
-      async.eachLimit(logs.map(remapLogs), 5, (log, cb) => {
+      return async.eachLimit(logs.map(remapLogs), 5, (log, cb) => {
         const date = moment(log.date);
         const url = `${date.format('YYYY/MM/DD')}/${date.format('HH')}/${log._id}.json`;
 
@@ -104,12 +104,12 @@ module.exports = (storage) =>
           if (data.lastReportDate !== now && new Date().getHours() >= reportTime) {
             sendDailyReport(now);
           }
-        })
+        });
     };
 
     return auth0logger
       .run(onLogsReceived)
-      .then(result => {
+      .then((result) => {
         if (result && result.status && result.status.error) {
           slack.send(result.status, result.checkpoint);
         } else if (config('SLACK_SEND_SUCCESS') === true || config('SLACK_SEND_SUCCESS') === 'true') {
@@ -118,7 +118,7 @@ module.exports = (storage) =>
         checkReportTime();
         res.json(result);
       })
-      .catch(err => {
+      .catch((err) => {
         slack.send({ error: err, logsProcessed: 0 }, null);
         checkReportTime();
         next(err);
