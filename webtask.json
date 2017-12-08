@@ -36,6 +36,22 @@
     "START_FROM": {
       "description": "Checkpoint ID of log to start from."
     },
+    "SEND_AS_BATCH": {
+      "description": "If enabled, extension will save batch of logs to one blob. Otherwise each log will be saved to separate blob.",
+      "type": "select",
+      "allowMultiple": false,
+      "default": "false",
+      "options": [
+        {
+          "value": "false",
+          "text": "No"
+        },
+        {
+          "value": "true",
+          "text": "Yes"
+        }
+      ]
+    },
     "SLACK_INCOMING_WEBHOOK_URL": {
       "description": "Slack Incoming Webhook URL used to report statistics and possible failures"
     },

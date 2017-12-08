@@ -34,14 +34,8 @@ module.exports = (storage) =>
       return record;
     };
 
-    const onLogsReceived = (logs, callback) => {
-      if (!logs || !logs.length) {
-        return callback();
-      }
-
-      logger.info(`Sending ${logs.length} logs to Azure Blob Storage.`);
-
-      async.eachLimit(logs.map(remapLogs), 5, (log, cb) => {
+    const sendSeparate = (logs ,callback) => {
+      async.eachLimit(logs, 5, (log, cb) => {
         const date = moment(log.date);
         const url = `${date.format('YYYY/MM/DD')}/${date.format('HH')}/${log._id}.json`;
 
@@ -54,6 +48,28 @@ module.exports = (storage) =>
         logger.info('Upload complete.');
         return callback();
       });
+    };
+
+    const sendBatch = (logs ,callback) => {
+      const date = moment();
+      const lastId = logs[logs.length - 1]._id;
+      const url = `${date.format('YYYY/MM/DD')}/${date.format('HH')}/${lastId}.json`;
+
+      blobService.createBlockBlobFromText(config('STORAGE_CONTAINER_NAME'), url, JSON.stringify(logs), callback);
+    };
+
+    const onLogsReceived = (logs, callback) => {
+      if (!logs || !logs.length) {
+        return callback();
+      }
+
+      logger.info(`Sending ${logs.length} logs to Azure Blob Storage.`);
+
+      if (config('SEND_AS_BATCH') === true || config('SEND_AS_BATCH') === 'true') {
+        return sendBatch(logs.map(remapLogs), callback);
+      }
+
+      return sendSeparate(logs.map(remapLogs), callback);
     };
 
     const slack = new loggingTools.reporters.SlackReporter({
